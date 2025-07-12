@@ -44,16 +44,14 @@
             <v-list-item-subtitle>{{ usuario?.email }}</v-list-item-subtitle>
           </v-list-item>
 
-          <v-divider></v-divider>
-
-          <v-list-item @click="showProfile = true">
+          <v-divider></v-divider>          <v-list-item @click="$inertia.visit('/perfil')">
             <template v-slot:prepend>
               <v-icon>mdi-account-circle</v-icon>
             </template>
             <v-list-item-title>Meu Perfil</v-list-item-title>
           </v-list-item>
 
-          <v-list-item @click="showSettings = true">
+          <v-list-item @click="$inertia.visit('/perfil/configuracoes')">
             <template v-slot:prepend>
               <v-icon>mdi-cog</v-icon>
             </template>
@@ -147,12 +145,29 @@
           ></v-list-item>
         </v-list-group>
 
-        <v-list-item
-          :to="'/base-conhecimento'"
-          prepend-icon="mdi-book-open-page-variant"
-          title="Base de Conhecimento"
-          :active="$page.component.startsWith('BaseConhecimento')"
-        ></v-list-item>
+        <v-list-group>
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-book-open-page-variant"
+              title="Base de Conhecimento"
+            ></v-list-item>
+          </template>
+
+          <v-list-item
+            :to="'/base-conhecimento'"
+            prepend-icon="mdi-format-list-bulleted"
+            title="Listar"
+            :active="$page.component === 'BaseConhecimento/Index'"
+          ></v-list-item>
+
+          <v-list-item
+            :to="'/base-conhecimento/create'"
+            prepend-icon="mdi-plus"
+            title="Novo Artigo"
+            :active="$page.component === 'BaseConhecimento/Create'"
+          ></v-list-item>
+        </v-list-group>
 
         <v-divider class="my-2"></v-divider>
 

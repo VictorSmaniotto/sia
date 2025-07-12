@@ -7,6 +7,7 @@ use App\Http\Controllers\IncidenteController;
 use App\Http\Controllers\ProblemaController;
 use App\Http\Controllers\ArtigoKbController;
 use App\Http\Controllers\ComentarioController;
+use App\Http\Controllers\PerfilController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,9 +95,24 @@ Route::middleware(['tenant'])->group(function () {
         Route::resource('problemas', ProblemaController::class);
 
         // Rotas para base de conhecimento
-        Route::resource('artigos-kb', ArtigoKbController::class);
+        Route::resource('base-conhecimento', ArtigoKbController::class)->names([
+            'index' => 'base-conhecimento.index',
+            'create' => 'base-conhecimento.create',
+            'store' => 'base-conhecimento.store',
+            'show' => 'base-conhecimento.show',
+            'edit' => 'base-conhecimento.edit',
+            'update' => 'base-conhecimento.update',
+            'destroy' => 'base-conhecimento.destroy',
+        ]);
 
         // Rotas para comentários
         Route::post('comentarios', [ComentarioController::class, 'store'])->name('comentarios.store');
+
+        // Perfil do usuário
+        Route::get('/perfil', [PerfilController::class, 'show'])->name('perfil.show');
+        Route::get('/perfil/edit', [PerfilController::class, 'edit'])->name('perfil.edit');
+        Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
+        Route::post('/perfil/password', [PerfilController::class, 'updatePassword'])->name('perfil.password');
+        Route::get('/perfil/configuracoes', [PerfilController::class, 'configuracoes'])->name('perfil.configuracoes');
     });
 });

@@ -14,6 +14,8 @@ class Usuario extends Model
         'tenant_id',
         'nome',
         'email',
+        'email_verified_at',
+        'email_verification_token',
         'senha_hash',
         'role',
         'ativo',
@@ -21,11 +23,13 @@ class Usuario extends Model
 
     protected $hidden = [
         'senha_hash',
+        'email_verification_token',
     ];
 
     protected $casts = [
         'ativo' => 'boolean',
         'criado_em' => 'datetime',
+        'email_verified_at' => 'datetime',
     ];
 
     const CREATED_AT = 'criado_em';

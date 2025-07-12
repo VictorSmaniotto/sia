@@ -36,11 +36,17 @@ class ArtigoKbController extends Controller
             });
         }
 
-        $artigos = $query->orderBy('criado_em', 'desc')->paginate(15);
+        $artigos = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        return Inertia::render('ArtigosKb/Index', [
+        return Inertia::render('BaseConhecimento/Index', [
             'artigos' => $artigos,
             'filtros' => $request->only(['categoria', 'status', 'busca']),
+            'stats' => [
+                'total' => ArtigoKb::where('tenant_id', $tenantId)->count(),
+                'publicados' => ArtigoKb::where('tenant_id', $tenantId)->where('status', 'publicado')->count(),
+                'rascunhos' => ArtigoKb::where('tenant_id', $tenantId)->where('status', 'rascunho')->count(),
+                'visualizacoes' => ArtigoKb::where('tenant_id', $tenantId)->sum('visualizacoes'),
+            ],
         ]);
     }
 
@@ -49,7 +55,28 @@ class ArtigoKbController extends Controller
      */
     public function create()
     {
-        return Inertia::render('ArtigosKb/Create');
+        $categorias = [
+            'tutoriais',
+            'procedimentos',
+            'troubleshooting',
+            'faq',
+            'politicas',
+            'documentacao',
+            'configuracao',
+            'seguranca'
+        ];
+
+        $statusOptions = [
+            ['value' => 'rascunho', 'title' => 'Rascunho'],
+            ['value' => 'revisao', 'title' => 'Em Revisão'],
+            ['value' => 'publicado', 'title' => 'Publicado'],
+            ['value' => 'arquivado', 'title' => 'Arquivado']
+        ];
+
+        return Inertia::render('BaseConhecimento/Create', [
+            'categorias' => $categorias,
+            'statusOptions' => $statusOptions,
+        ]);
     }
 
     /**
@@ -59,23 +86,28 @@ class ArtigoKbController extends Controller
     {
         $request->validate([
             'titulo' => 'required|string|max:255',
+            'resumo' => 'nullable|string|max:500',
             'conteudo' => 'required|string',
             'categoria' => 'required|string|max:100',
             'palavras_chave' => 'nullable|string',
+            'status' => 'required|in:rascunho,revisao,publicado,arquivado',
+            'tempo_leitura' => 'nullable|integer|min:1'
         ]);
 
         $artigo = ArtigoKb::create([
             'tenant_id' => app('tenant')->id,
             'titulo' => $request->titulo,
+            'resumo' => $request->resumo,
             'conteudo' => $request->conteudo,
             'categoria' => $request->categoria,
             'palavras_chave' => $request->palavras_chave,
-            'status' => 'Rascunho',
+            'status' => $request->status,
             'autor_id' => auth()->user()->id,
             'visualizacoes' => 0,
+            'tempo_leitura' => $request->tempo_leitura,
         ]);
 
-        return redirect()->route('artigos-kb.index')
+        return redirect()->route('base-conhecimento.show', $artigo->id)
                         ->with('success', 'Artigo criado com sucesso!');
     }
 
@@ -84,15 +116,27 @@ class ArtigoKbController extends Controller
      */
     public function show(string $id)
     {
-        $artigo = ArtigoKb::where('tenant_id', app('tenant')->id)
+        $tenantId = app('tenant')->id;
+
+        $artigo = ArtigoKb::where('tenant_id', $tenantId)
                          ->with(['autor'])
                          ->findOrFail($id);
 
         // Incrementar visualizações
         $artigo->increment('visualizacoes');
 
-        return Inertia::render('ArtigosKb/Show', [
+        // Buscar artigos relacionados (mesma categoria, excluindo o atual)
+        $artigosRelacionados = ArtigoKb::where('tenant_id', $tenantId)
+                                      ->where('categoria', $artigo->categoria)
+                                      ->where('id', '!=', $id)
+                                      ->where('status', 'publicado')
+                                      ->orderBy('visualizacoes', 'desc')
+                                      ->limit(5)
+                                      ->get(['id', 'titulo', 'categoria', 'criado_em']);
+
+        return Inertia::render('BaseConhecimento/Show', [
             'artigo' => $artigo,
+            'artigosRelacionados' => $artigosRelacionados,
         ]);
     }
 
@@ -104,8 +148,28 @@ class ArtigoKbController extends Controller
         $artigo = ArtigoKb::where('tenant_id', app('tenant')->id)
                          ->findOrFail($id);
 
-        return Inertia::render('ArtigosKb/Edit', [
+        $categorias = [
+            'tutoriais',
+            'procedimentos',
+            'troubleshooting',
+            'faq',
+            'politicas',
+            'documentacao',
+            'configuracao',
+            'seguranca'
+        ];
+
+        $statusOptions = [
+            ['value' => 'rascunho', 'title' => 'Rascunho'],
+            ['value' => 'revisao', 'title' => 'Em Revisão'],
+            ['value' => 'publicado', 'title' => 'Publicado'],
+            ['value' => 'arquivado', 'title' => 'Arquivado']
+        ];
+
+        return Inertia::render('BaseConhecimento/Edit', [
             'artigo' => $artigo,
+            'categorias' => $categorias,
+            'statusOptions' => $statusOptions,
         ]);
     }
 
@@ -119,21 +183,25 @@ class ArtigoKbController extends Controller
 
         $request->validate([
             'titulo' => 'required|string|max:255',
+            'resumo' => 'nullable|string|max:500',
             'conteudo' => 'required|string',
             'categoria' => 'required|string|max:100',
-            'status' => 'required|in:Rascunho,Publicado,Arquivado',
+            'status' => 'required|in:rascunho,revisao,publicado,arquivado',
             'palavras_chave' => 'nullable|string',
+            'tempo_leitura' => 'nullable|integer|min:1'
         ]);
 
         $artigo->update($request->only([
             'titulo',
+            'resumo',
             'conteudo',
             'categoria',
             'status',
-            'palavras_chave'
+            'palavras_chave',
+            'tempo_leitura'
         ]));
 
-        return redirect()->route('artigos-kb.index')
+        return redirect()->route('base-conhecimento.show', $artigo->id)
                         ->with('success', 'Artigo atualizado com sucesso!');
     }
 
@@ -147,7 +215,7 @@ class ArtigoKbController extends Controller
 
         $artigo->delete();
 
-        return redirect()->route('artigos-kb.index')
+        return redirect()->route('base-conhecimento.index')
                         ->with('success', 'Artigo excluído com sucesso!');
     }
 }

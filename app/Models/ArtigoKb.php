@@ -14,8 +14,14 @@ class ArtigoKb extends Model
     protected $fillable = [
         'tenant_id',
         'titulo',
+        'resumo',
         'conteudo',
         'categoria',
+        'palavras_chave',
+        'status',
+        'autor_id',
+        'visualizacoes',
+        'tempo_leitura',
         'publicado_por_id',
         'problema_id',
     ];
@@ -36,6 +42,11 @@ class ArtigoKb extends Model
     public function publicadoPor()
     {
         return $this->belongsTo(Usuario::class, 'publicado_por_id');
+    }
+
+    public function autor()
+    {
+        return $this->belongsTo(Usuario::class, 'autor_id');
     }
 
     public function problema()
