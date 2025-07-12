@@ -3,7 +3,7 @@
     <v-main>
       <v-container>
         <v-row justify="center">
-          <v-col cols="12" md="8">
+          <v-col cols="12" md="10">
             <v-card class="mx-auto pa-8" elevation="4">
               <v-card-title class="text-h4 text-center mb-4">
                 <v-icon left color="primary" size="large">mdi-tools</v-icon>
@@ -12,12 +12,47 @@
 
               <v-card-text class="text-center">
                 <v-chip color="success" variant="tonal" class="mb-4">
-                  Sistema em Desenvolvimento
+                  {{ tenant.nome }}
                 </v-chip>
 
                 <p class="text-h6 mb-4">
                   Bem-vindo ao Sistema de Gestão de Incidentes, Problemas e Base de Conhecimento
                 </p>
+
+                <!-- Estatísticas do Sistema -->
+                <v-row class="mb-6">
+                  <v-col cols="6" md="3">
+                    <v-card variant="outlined" color="error" class="pa-4">
+                      <v-icon color="error" size="36" class="mb-2">mdi-alert-circle</v-icon>
+                      <h2 class="text-h4">{{ stats.incidentes_abertos }}</h2>
+                      <p class="text-body-2">Incidentes Abertos</p>
+                    </v-card>
+                  </v-col>
+
+                  <v-col cols="6" md="3">
+                    <v-card variant="outlined" color="warning" class="pa-4">
+                      <v-icon color="warning" size="36" class="mb-2">mdi-magnify</v-icon>
+                      <h2 class="text-h4">{{ stats.problemas_novos }}</h2>
+                      <p class="text-body-2">Problemas Novos</p>
+                    </v-card>
+                  </v-col>
+
+                  <v-col cols="6" md="3">
+                    <v-card variant="outlined" color="success" class="pa-4">
+                      <v-icon color="success" size="36" class="mb-2">mdi-book-open</v-icon>
+                      <h2 class="text-h4">{{ stats.artigos_kb }}</h2>
+                      <p class="text-body-2">Artigos KB</p>
+                    </v-card>
+                  </v-col>
+
+                  <v-col cols="6" md="3">
+                    <v-card variant="outlined" color="info" class="pa-4">
+                      <v-icon color="info" size="36" class="mb-2">mdi-account-group</v-icon>
+                      <h2 class="text-h4">{{ stats.usuarios_ativos }}</h2>
+                      <p class="text-body-2">Usuários Ativos</p>
+                    </v-card>
+                  </v-col>
+                </v-row>
 
                 <v-divider class="my-4"></v-divider>
 
@@ -57,4 +92,9 @@
 
 <script setup>
 import { Head } from '@inertiajs/inertia-vue3'
+
+const props = defineProps({
+  tenant: Object,
+  stats: Object
+})
 </script>
