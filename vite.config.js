@@ -22,4 +22,18 @@ export default defineConfig({
             vue: 'vue/dist/vue.esm-bundler.js',
         },
     },
+    server: {
+        host: '127.0.0.1',
+        port: 5174,
+        strictPort: false,
+        cors: {
+            origin: ['https://sia.test', 'http://sia.test', 'http://localhost', 'https://localhost'],
+            credentials: true
+        },
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+    },
 });

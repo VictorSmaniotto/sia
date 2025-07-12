@@ -54,13 +54,13 @@
               <v-card-text class="text-center">
                 <p class="text-body-2 mb-2">Usuários de teste disponíveis:</p>
                 <v-chip color="primary" variant="tonal" size="small" class="ma-1">
-                  admin@demo.com
+                  admin@teste.com
                 </v-chip>
                 <v-chip color="success" variant="tonal" size="small" class="ma-1">
-                  tecnico@demo.com
+                  tecnico@teste.com
                 </v-chip>
                 <v-chip color="warning" variant="tonal" size="small" class="ma-1">
-                  gestor@demo.com
+                  usuario@teste.com
                 </v-chip>
                 <p class="text-caption mt-2">Senha: 123456</p>
               </v-card-text>

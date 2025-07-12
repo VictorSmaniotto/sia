@@ -1,157 +1,82 @@
 <template>
-  <v-app>
-    <!-- Barra de navegação superior -->
-    <v-app-bar color="primary" density="compact" dark>
-      <v-app-bar-title>
-        <v-icon left>mdi-tools</v-icon>
-        SIA - Sistema ITSM
-      </v-app-bar-title>
+  <v-app>    <v-app-bar app color="primary" dark>
+      <v-app-bar-title>{{ tenant?.nome || 'SIA - Sistema ITSM' }}</v-app-bar-title>
 
       <v-spacer></v-spacer>
 
-      <v-chip color="white" variant="tonal" class="mr-4">
-        {{ tenant.nome }}
-      </v-chip>
+      <v-btn icon @click="logout" title="Sair">
+        <v-icon>mdi-logout</v-icon>
+      </v-btn>
 
-      <v-menu>
-        <template v-slot:activator="{ props }">
-          <v-btn icon v-bind="props">
-            <v-avatar size="32">
-              <v-icon>mdi-account-circle</v-icon>
-            </v-avatar>
-          </v-btn>
-        </template>
-
-        <v-list>
-          <v-list-item>
-            <v-list-item-title>{{ usuario.nome }}</v-list-item-title>
-            <v-list-item-subtitle>{{ usuario.role }}</v-list-item-subtitle>
-          </v-list-item>
-          <v-divider></v-divider>
-          <v-list-item @click="logout">
-            <v-list-item-title>
-              <v-icon left>mdi-logout</v-icon>
-              Sair
-            </v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
+      <v-btn icon @click="drawer = !drawer">
+        <v-icon>mdi-menu</v-icon>
+      </v-btn>
     </v-app-bar>
 
-    <!-- Menu lateral -->
-    <v-navigation-drawer permanent>
+    <v-navigation-drawer v-model="drawer" app>
       <v-list>
-        <v-list-item>
-          <v-list-item-title class="text-h6">
-            Dashboard
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-
-      <v-divider></v-divider>
-
-      <v-list density="compact" nav>
-        <v-list-item prepend-icon="mdi-view-dashboard" title="Visão Geral" value="dashboard"></v-list-item>
-        <v-list-item prepend-icon="mdi-alert-circle" title="Incidentes" value="incidentes"></v-list-item>
-        <v-list-item prepend-icon="mdi-magnify" title="Problemas" value="problemas"></v-list-item>
-        <v-list-item prepend-icon="mdi-book-open" title="Base de Conhecimento" value="kb"></v-list-item>
-
-        <v-divider class="my-2"></v-divider>
-
-        <v-list-item v-if="usuario.role === 'admin'" prepend-icon="mdi-cog" title="Configurações" value="config"></v-list-item>
-        <v-list-item v-if="usuario.role === 'gestor' || usuario.role === 'admin'" prepend-icon="mdi-chart-line" title="Relatórios" value="relatorios"></v-list-item>
+        <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" to="/dashboard"></v-list-item>
+        <v-list-item prepend-icon="mdi-alert-circle" title="Incidentes" :to="route('incidentes.index')"></v-list-item>
+        <v-list-item prepend-icon="mdi-bug" title="Problemas" :to="route('problemas.index')"></v-list-item>
+        <v-list-item prepend-icon="mdi-book-open-variant" title="Base de Conhecimento" :to="route('artigos-kb.index')"></v-list-item>
       </v-list>
     </v-navigation-drawer>
 
-    <!-- Conteúdo principal -->
     <v-main>
-      <v-container>
+      <v-container fluid>
         <v-row>
           <v-col cols="12">
-            <h1 class="text-h4 mb-4">
-              Bem-vindo, {{ usuario.nome }}!
-            </h1>
-          </v-col>
-        </v-row>
+            <h1 class="text-h3 mb-6">Bem-vindo ao Sistema ITSM</h1>
 
-        <!-- Cards de estatísticas -->
-        <v-row>
-          <v-col cols="12" md="3">
-            <v-card color="error" variant="tonal">
-              <v-card-text class="d-flex align-center">
-                <div>
-                  <h2 class="text-h3">{{ stats.incidentes_abertos }}</h2>
-                  <p class="text-body-1">Incidentes Abertos</p>
-                </div>
-                <v-spacer></v-spacer>
-                <v-icon size="48" color="error">mdi-alert-circle</v-icon>
-              </v-card-text>
-            </v-card>
-          </v-col>
+            <v-row>
+              <v-col v-for="stat in statCards" :key="stat.title" cols="12" sm="6" md="3">
+                <v-card>
+                  <v-card-text>
+                    <div class="d-flex align-center">
+                      <v-icon :color="stat.color" size="40" class="mr-4">{{ stat.icon }}</v-icon>
+                      <div>
+                        <div class="text-h6">{{ stat.value }}</div>
+                        <div class="text-caption text-medium-emphasis">{{ stat.title }}</div>
+                      </div>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
 
-          <v-col cols="12" md="3">
-            <v-card color="warning" variant="tonal">
-              <v-card-text class="d-flex align-center">
-                <div>
-                  <h2 class="text-h3">{{ stats.incidentes_em_andamento }}</h2>
-                  <p class="text-body-1">Em Andamento</p>
-                </div>
-                <v-spacer></v-spacer>
-                <v-icon size="48" color="warning">mdi-clock-alert</v-icon>
-              </v-card-text>
-            </v-card>
-          </v-col>
+            <v-row class="mt-6">
+              <v-col cols="12" md="6">
+                <v-card>
+                  <v-card-title>Ações Rápidas</v-card-title>
+                  <v-card-text>
+                    <v-list>
+                      <v-list-item prepend-icon="mdi-plus" title="Novo Incidente" :to="route('incidentes.create')"></v-list-item>
+                      <v-list-item prepend-icon="mdi-plus" title="Novo Problema" :to="route('problemas.create')"></v-list-item>
+                      <v-list-item prepend-icon="mdi-plus" title="Novo Artigo KB" :to="route('artigos-kb.create')"></v-list-item>
+                    </v-list>
+                  </v-card-text>
+                </v-card>
+              </v-col>
 
-          <v-col cols="12" md="3">
-            <v-card color="info" variant="tonal">
-              <v-card-text class="d-flex align-center">
-                <div>
-                  <h2 class="text-h3">{{ stats.problemas_novos }}</h2>
-                  <p class="text-body-1">Problemas Novos</p>
-                </div>
-                <v-spacer></v-spacer>
-                <v-icon size="48" color="info">mdi-magnify</v-icon>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" md="3">
-            <v-card color="success" variant="tonal">
-              <v-card-text class="d-flex align-center">
-                <div>
-                  <h2 class="text-h3">{{ stats.artigos_kb }}</h2>
-                  <p class="text-body-1">Artigos KB</p>
-                </div>
-                <v-spacer></v-spacer>
-                <v-icon size="48" color="success">mdi-book-open</v-icon>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <v-row class="mt-4">
-          <v-col cols="12" md="6">
-            <v-card>
-              <v-card-title>
-                <v-icon left>mdi-chart-bar</v-icon>
-                Atividades Recentes
-              </v-card-title>
-              <v-card-text>
-                <p class="text-body-2">Funcionalidade em desenvolvimento...</p>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col cols="12" md="6">
-            <v-card>
-              <v-card-title>
-                <v-icon left>mdi-clock</v-icon>
-                Próximos Vencimentos SLA
-              </v-card-title>
-              <v-card-text>
-                <p class="text-body-2">Funcionalidade em desenvolvimento...</p>
-              </v-card-text>
-            </v-card>
+              <v-col cols="12" md="6">
+                <v-card>
+                  <v-card-title>Informações do Sistema</v-card-title>
+                  <v-card-text>
+                    <v-list>
+                      <v-list-item>
+                        <v-list-item-title>Tenant: {{ tenant?.nome || 'N/A' }}</v-list-item-title>
+                      </v-list-item>
+                      <v-list-item>
+                        <v-list-item-title>Domínio: {{ tenant?.dominio || 'N/A' }}</v-list-item-title>
+                      </v-list-item>
+                      <v-list-item>
+                        <v-list-item-title>Status: Ativo</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
           </v-col>
         </v-row>
       </v-container>
@@ -159,16 +84,55 @@
   </v-app>
 </template>
 
-<script setup>
-import { router } from '@inertiajs/vue3'
-
-const props = defineProps({
-  usuario: Object,
-  stats: Object,
-  tenant: Object
-})
-
-const logout = () => {
-  router.post('/logout')
+<script>
+export default {
+  name: 'Dashboard',
+  props: {
+    tenant: Object,
+    stats: Object
+  },
+  data() {
+    return {
+      drawer: false
+    }
+  },
+  computed: {
+    statCards() {
+      return [
+        {
+          title: 'Incidentes Abertos',
+          value: this.stats?.incidentes_abertos || 0,
+          icon: 'mdi-alert-circle',
+          color: 'error'
+        },
+        {
+          title: 'Problemas Novos',
+          value: this.stats?.problemas_novos || 0,
+          icon: 'mdi-bug',
+          color: 'warning'
+        },
+        {
+          title: 'Artigos KB',
+          value: this.stats?.artigos_kb || 0,
+          icon: 'mdi-book-open-variant',
+          color: 'info'
+        },
+        {
+          title: 'Usuários Ativos',
+          value: this.stats?.usuarios_ativos || 0,
+          icon: 'mdi-account-multiple',
+          color: 'success'
+        }
+      ]
+    }
+  },
+  methods: {
+    route(name, params) {
+      return this.$root.route ? this.$root.route(name, params) : '#'
+    },
+    logout() {
+      this.$inertia.post('/logout')
+    }
+  }
 }
 </script>

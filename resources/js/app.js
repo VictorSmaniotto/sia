@@ -38,10 +38,36 @@ createInertiaApp({
   title: (title) => `${title} - ${appName}`,
   resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
   setup({ el, app, props, plugin }) {
-    return createApp({ render: () => h(app, props) })
+    const vueApp = createApp({ render: () => h(app, props) })
       .use(plugin)
       .use(vuetify)
-      .mount(el)
+
+    // Adicionar função route globalmente usando Ziggy
+    vueApp.config.globalProperties.route = function(name, params = {}) {
+      if (window.route) {
+        return window.route(name, params)
+      }
+
+      // Fallback manual para as rotas principais
+      const routes = {
+        'incidentes.index': '/incidentes',
+        'incidentes.create': '/incidentes/create',
+        'incidentes.show': (id) => `/incidentes/${id}`,
+        'incidentes.edit': (id) => `/incidentes/${id}/edit`,
+        'problemas.index': '/problemas',
+        'problemas.create': '/problemas/create',
+        'artigos-kb.index': '/artigos-kb',
+        'artigos-kb.create': '/artigos-kb/create'
+      }
+
+      const route = routes[name]
+      if (typeof route === 'function') {
+        return route(params)
+      }
+      return route || '#'
+    }
+
+    return vueApp.mount(el)
   },
   progress: {
     color: '#4B5563',

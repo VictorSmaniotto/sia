@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\IncidenteController;
 use App\Http\Controllers\ProblemaController;
 use App\Http\Controllers\ArtigoKbController;
+use App\Http\Controllers\ComentarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,27 +22,33 @@ use App\Http\Controllers\ArtigoKbController;
 // Aplicar middleware tenant em todas as rotas
 Route::middleware(['tenant'])->group(function () {
 
-    // Rotas públicas (sem autenticação)
+    // Rota raiz redireciona para login ou dashboard
     Route::get('/', function () {
-        return Inertia::render('Welcome', [
-            'tenant' => app('tenant'),
-            'stats' => [
-                'incidentes_abertos' => \App\Models\Incidente::where('tenant_id', app('tenant')->id)->where('status', 'Aberto')->count(),
-                'problemas_novos' => \App\Models\Problema::where('tenant_id', app('tenant')->id)->where('status', 'Novo')->count(),
-                'artigos_kb' => \App\Models\ArtigoKb::where('tenant_id', app('tenant')->id)->count(),
-                'usuarios_ativos' => \App\Models\Usuario::where('tenant_id', app('tenant')->id)->where('ativo', true)->count(),
-            ]
-        ]);
+        if (session()->has('user_id')) {
+            return redirect('/dashboard');
+        }
+        return redirect('/login');
     });
 
-    // Rotas de autenticação
+    // Rotas de autenticação (públicas)
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Rotas protegidas (necessitam autenticação)
     Route::middleware(['custom.auth'])->group(function () {
-        Route::get('/dashboard', [AuthController::class, 'showDashboard']);
+        // Dashboard principal (antiga Welcome)
+        Route::get('/dashboard', function () {
+            return Inertia::render('Dashboard', [
+                'tenant' => app('tenant'),
+                'stats' => [
+                    'incidentes_abertos' => 0,
+                    'problemas_novos' => 0,
+                    'artigos_kb' => 0,
+                    'usuarios_ativos' => 0,
+                ]
+            ]);
+        })->name('dashboard');
 
         // Rotas para incidentes
         Route::resource('incidentes', IncidenteController::class);
@@ -51,5 +58,8 @@ Route::middleware(['tenant'])->group(function () {
 
         // Rotas para base de conhecimento
         Route::resource('artigos-kb', ArtigoKbController::class);
+
+        // Rotas para comentários
+        Route::post('comentarios', [ComentarioController::class, 'store'])->name('comentarios.store');
     });
 });
