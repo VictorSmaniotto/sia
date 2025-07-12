@@ -94,8 +94,10 @@ Route::middleware(['tenant'])->group(function () {
         // Rotas para problemas
         Route::resource('problemas', ProblemaController::class);
 
-        // Rotas para base de conhecimento
-        Route::resource('base-conhecimento', ArtigoKbController::class)->names([
+        // Rotas para base de conhecimento (apenas técnicos e admins podem alterar)
+        Route::resource('base-conhecimento', ArtigoKbController::class)
+            ->middleware('role:admin,tecnico')
+            ->names([
             'index' => 'base-conhecimento.index',
             'create' => 'base-conhecimento.create',
             'store' => 'base-conhecimento.store',
