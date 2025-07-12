@@ -17,12 +17,10 @@ class TenantMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Por enquanto, vamos usar um tenant padrão (ID = 1) para desenvolvimento
-        // Futuramente isso pode ser baseado no domínio ou subdomínio
-        $tenantId = 1;
+        // Identifica o tenant pelo domínio acessado
+        $host = $request->getHost();
 
-        // Verificar se o tenant existe
-        $tenant = Tenant::find($tenantId);
+        $tenant = Tenant::where('dominio', $host)->where('ativo', true)->first();
 
         if (!$tenant || !$tenant->ativo) {
             abort(404, 'Tenant não encontrado ou inativo');
