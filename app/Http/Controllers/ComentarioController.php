@@ -30,22 +30,48 @@ class ComentarioController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'incidente_id' => 'required|exists:incidentes,id',
-            'conteudo' => 'required|string',
+            'incidente_id' => 'nullable|exists:incidentes,id',
+            'problema_id' => 'nullable|exists:problemas,id',
+            'conteudo' => 'required|string|max:2000',
         ]);
 
-        // Verificar se o incidente pertence ao tenant atual
-        $incidente = Incidente::where('tenant_id', app('tenant')->id)
-                             ->findOrFail($request->incidente_id);
+        // Deve ter ou incidente_id ou problema_id, mas não ambos
+        if (!$request->incidente_id && !$request->problema_id) {
+            return back()->withErrors(['error' => 'Deve ser associado a um incidente ou problema.']);
+        }
+
+        if ($request->incidente_id && $request->problema_id) {
+            return back()->withErrors(['error' => 'Não pode ser associado a incidente e problema simultaneamente.']);
+        }
+
+        $tenantId = app('tenant')->id;
+
+        // Verificar se a entidade pertence ao tenant atual
+        if ($request->incidente_id) {
+            $incidente = \App\Models\Incidente::where('tenant_id', $tenantId)
+                                             ->findOrFail($request->incidente_id);
+        }
+
+        if ($request->problema_id) {
+            $problema = \App\Models\Problema::where('tenant_id', $tenantId)
+                                           ->findOrFail($request->problema_id);
+        }
+
+        // Obter usuário atual da sessão (sistema customizado de auth)
+        $usuarioId = session('usuario_id');
+        if (!$usuarioId) {
+            return back()->withErrors(['error' => 'Usuário não autenticado.']);
+        }
 
         $comentario = Comentario::create([
-            'tenant_id' => app('tenant')->id,
+            'tenant_id' => $tenantId,
             'incidente_id' => $request->incidente_id,
-            'usuario_id' => auth()->user()->id,
+            'problema_id' => $request->problema_id,
+            'autor_id' => $usuarioId,
             'conteudo' => $request->conteudo,
         ]);
 
-        return redirect()->back()->with('success', 'Comentário adicionado com sucesso!');
+        return back()->with('success', 'Comentário adicionado com sucesso!');
     }
 
     /**

@@ -45,6 +45,27 @@
             </v-row>
 
             <v-row class="mt-6">
+              <!-- Alertas de Sistema -->
+              <v-col cols="12" v-if="alertasCriticos.length > 0">
+                <v-card color="error" variant="tonal">
+                  <v-card-title>
+                    <v-icon class="mr-2">mdi-alert</v-icon>
+                    Alertas Críticos
+                  </v-card-title>
+                  <v-card-text>
+                    <v-list density="compact">
+                      <v-list-item
+                        v-for="alerta in alertasCriticos"
+                        :key="alerta.id"
+                        :prepend-icon="alerta.icon"
+                        :title="alerta.titulo"
+                        :subtitle="alerta.descricao"
+                      />
+                    </v-list>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
               <v-col cols="12" md="6">
                 <v-card>
                   <v-card-title>Ações Rápidas</v-card-title>
@@ -89,7 +110,8 @@ export default {
   name: 'Dashboard',
   props: {
     tenant: Object,
-    stats: Object
+    stats: Object,
+    metricas_extras: Object
   },
   data() {
     return {
@@ -124,6 +146,29 @@ export default {
           color: 'success'
         }
       ]
+    },
+    alertasCriticos() {
+      const alertas = []
+
+      if (this.metricas_extras?.incidentes_criticos > 0) {
+        alertas.push({
+          id: 'incidentes_criticos',
+          icon: 'mdi-alert-circle',
+          titulo: `${this.metricas_extras.incidentes_criticos} incidente(s) crítico(s) aberto(s)`,
+          descricao: 'Necessita atenção imediata'
+        })
+      }
+
+      if (this.metricas_extras?.erros_conhecidos > 5) {
+        alertas.push({
+          id: 'muitos_erros',
+          icon: 'mdi-bug',
+          titulo: `${this.metricas_extras.erros_conhecidos} erros conhecidos não resolvidos`,
+          descricao: 'Considere priorizar a resolução definitiva'
+        })
+      }
+
+      return alertas
     }
   },
   methods: {

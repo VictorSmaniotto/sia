@@ -165,55 +165,11 @@
             <!-- Comentários -->
             <v-divider class="my-4" />
 
-            <div>
-              <h4 class="mb-4">Comentários</h4>
-
-              <!-- Form para novo comentário -->
-              <v-card variant="outlined" class="mb-4">
-                <v-card-text>
-                  <v-textarea
-                    v-model="novoComentario"
-                    label="Adicionar comentário"
-                    rows="3"
-                    :disabled="adicionandoComentario"
-                  />
-                  <div class="d-flex justify-end mt-2">
-                    <v-btn
-                      color="primary"
-                      :loading="adicionandoComentario"
-                      @click="adicionarComentario"
-                      :disabled="!novoComentario.trim()"
-                    >
-                      Adicionar
-                    </v-btn>
-                  </div>
-                </v-card-text>
-              </v-card>
-
-              <!-- Lista de comentários -->
-              <div v-if="incidente.comentarios?.length">
-                <v-card
-                  v-for="comentario in incidente.comentarios"
-                  :key="comentario.id"
-                  variant="outlined"
-                  class="mb-2"
-                >
-                  <v-card-text>
-                    <div class="d-flex justify-space-between align-start">
-                      <div>
-                        <div class="text-body-1">{{ comentario.conteudo }}</div>
-                        <div class="text-caption text-grey mt-1">
-                          Por {{ comentario.usuario?.nome }} em {{ formatDate(comentario.criado_em) }}
-                        </div>
-                      </div>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </div>
-              <div v-else class="text-center text-grey py-4">
-                Nenhum comentário ainda
-              </div>
-            </div>
+            <ComentariosSection
+              :comentarios="incidente.comentarios || []"
+              :entity-type="'incidente'"
+              :entity-id="incidente.id"
+            />
           </v-card-text>
         </v-card>
       </v-col>
@@ -224,15 +180,13 @@
 <script setup>
 import { ref } from 'vue'
 import { router } from '@inertiajs/inertia-vue3'
+import ComentariosSection from '@/Components/ComentariosSection.vue'
 
 const props = defineProps({
   incidente: Object,
   usuarios: Array,
   problemas: Array
 })
-
-const novoComentario = ref('')
-const adicionandoComentario = ref(false)
 
 const getStatusColor = (status) => {
   const cores = {
@@ -256,23 +210,5 @@ const getPrioridadeColor = (prioridade) => {
 
 const formatDate = (date) => {
   return new Date(date).toLocaleString('pt-BR')
-}
-
-const adicionarComentario = () => {
-  if (!novoComentario.value.trim()) return
-
-  adicionandoComentario.value = true
-
-  router.post(route('comentarios.store'), {
-    incidente_id: props.incidente.id,
-    conteudo: novoComentario.value
-  }, {
-    onSuccess: () => {
-      novoComentario.value = ''
-    },
-    onFinish: () => {
-      adicionandoComentario.value = false
-    }
-  })
 }
 </script>

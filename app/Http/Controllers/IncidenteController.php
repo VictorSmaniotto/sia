@@ -110,7 +110,7 @@ class IncidenteController extends Controller
                                  'solicitante',
                                  'responsavel',
                                  'problema',
-                                 'comentarios.usuario',
+                                 'comentarios.autor',
                                  'historicos'
                              ])
                              ->findOrFail($id);

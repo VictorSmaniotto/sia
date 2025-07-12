@@ -33,19 +33,56 @@ Route::middleware(['tenant'])->group(function () {
     // Rotas de autenticação (públicas)
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendPasswordResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Rotas protegidas (necessitam autenticação)
     Route::middleware(['custom.auth'])->group(function () {
         // Dashboard principal (antiga Welcome)
         Route::get('/dashboard', function () {
+            $tenantId = app('tenant')->id;
+
+            // Calcular métricas reais
+            $incidentesAbertos = \App\Models\Incidente::where('tenant_id', $tenantId)
+                                                     ->whereIn('status', ['Aberto', 'Em andamento'])
+                                                     ->count();
+
+            $problemasNovos = \App\Models\Problema::where('tenant_id', $tenantId)
+                                                 ->whereIn('status', ['Novo', 'Investigando'])
+                                                 ->count();
+
+            $artigosKb = \App\Models\ArtigoKb::where('tenant_id', $tenantId)->count();
+
+            $usuariosAtivos = \App\Models\Usuario::where('tenant_id', $tenantId)
+                                                ->where('ativo', true)
+                                                ->count();
+
+            // Métricas adicionais
+            $incidentesCriticosAbertos = \App\Models\Incidente::where('tenant_id', $tenantId)
+                                                             ->where('prioridade', 'Alta')
+                                                             ->whereIn('status', ['Aberto', 'Em andamento'])
+                                                             ->count();
+
+            $problemasErroConhecido = \App\Models\Problema::where('tenant_id', $tenantId)
+                                                         ->where('status', 'Erro Conhecido')
+                                                         ->count();
+
             return Inertia::render('Dashboard', [
                 'tenant' => app('tenant'),
                 'stats' => [
-                    'incidentes_abertos' => 0,
-                    'problemas_novos' => 0,
-                    'artigos_kb' => 0,
-                    'usuarios_ativos' => 0,
+                    'incidentes_abertos' => $incidentesAbertos,
+                    'problemas_novos' => $problemasNovos,
+                    'artigos_kb' => $artigosKb,
+                    'usuarios_ativos' => $usuariosAtivos,
+                ],
+                'metricas_extras' => [
+                    'incidentes_criticos' => $incidentesCriticosAbertos,
+                    'erros_conhecidos' => $problemasErroConhecido,
                 ]
             ]);
         })->name('dashboard');
