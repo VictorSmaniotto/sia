@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Auth\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,7 +15,10 @@ use Inertia\Inertia;
 |
 */
 
+// Aplicar middleware tenant em todas as rotas
 Route::middleware(['tenant'])->group(function () {
+
+    // Rotas públicas (sem autenticação)
     Route::get('/', function () {
         return Inertia::render('Welcome', [
             'tenant' => app('tenant'),
@@ -25,5 +29,20 @@ Route::middleware(['tenant'])->group(function () {
                 'usuarios_ativos' => \App\Models\Usuario::where('tenant_id', app('tenant')->id)->where('ativo', true)->count(),
             ]
         ]);
+    });
+
+    // Rotas de autenticação
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Rotas protegidas (necessitam autenticação)
+    Route::middleware(['custom.auth'])->group(function () {
+        Route::get('/dashboard', [AuthController::class, 'showDashboard']);
+
+        // Futuras rotas para incidentes, problemas, etc.
+        // Route::resource('incidentes', IncidenteController::class);
+        // Route::resource('problemas', ProblemaController::class);
+        // Route::resource('artigos-kb', ArtigoKbController::class);
     });
 });
