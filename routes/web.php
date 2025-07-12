@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\IncidenteController;
+use App\Http\Controllers\ProblemaController;
+use App\Http\Controllers\ArtigoKbController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,9 +43,13 @@ Route::middleware(['tenant'])->group(function () {
     Route::middleware(['custom.auth'])->group(function () {
         Route::get('/dashboard', [AuthController::class, 'showDashboard']);
 
-        // Futuras rotas para incidentes, problemas, etc.
-        // Route::resource('incidentes', IncidenteController::class);
-        // Route::resource('problemas', ProblemaController::class);
-        // Route::resource('artigos-kb', ArtigoKbController::class);
+        // Rotas para incidentes
+        Route::resource('incidentes', IncidenteController::class);
+
+        // Rotas para problemas
+        Route::resource('problemas', ProblemaController::class);
+
+        // Rotas para base de conhecimento
+        Route::resource('artigos-kb', ArtigoKbController::class);
     });
 });
